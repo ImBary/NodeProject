@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users List</title>
+</head>
+<body>
+<% if (userName && userName !== 'Nieznajomy') { %>
+    <h1>Witaj, <%= userName %>!</h1>
+    <a href="/logout">Wyloguj</a>
+<% } else { %>
+    <a href="/login">Logowanie</a>
+<% } %>
+<h2>Lista Użytkowników</h2>
+<ul>
+    <% users.forEach(user => { %>
+        <li><%= user.login %> </li>
+    <% }) %>
+</ul>
+
+<h2>Add User</h2>
+<form action="/users" method="POST">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <label for="age">Age:</label>
+    <input type="number" id="age" name="age" required>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <button type="submit">Add User</button>
+</form>
+
+
+
+</body>
+</html>
