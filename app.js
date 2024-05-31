@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
-const api = require('./db/api');
+const api = require('./api');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const connection = require('./connection'); // Import the database connection
-require('dotenv').config('./db/.env');
+require('dotenv').config();
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(session({
@@ -55,8 +55,9 @@ app.get('/', async (req, res) => {
         req.session.user = userName; // Odtwórz sesję z ciasteczka
     }
     try {
-        const users = await api.getUsers(); // Pobieranie użytkowników z bazy danych
-        res.render('home', { users, userName }); // Przekazanie użytkowników i nazwy użytkownika do szablonu
+        const products = await api.getProducts(); // Pobieranie użytkowników z bazy danych
+        console.log("app: "+JSON.stringify(products));
+        res.render('home', { products, userName }); // Przekazanie użytkowników i nazwy użytkownika do szablonu
     } catch (error) {
         console.error(error);
         res.status(500).send('Błąd serwera');
