@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+</head>
+<body>
+<% if (userName && userName !== 'Nieznajomy') { %>
+    <h1>Witaj, <%= userName %>!</h1>
+    <a href="/logout">Wyloguj</a>
+<% } else { %>
+    <a href="/login">Logowanie</a>
+<% } %>
+<form action="/cart" method="GET" style="display: inline">
+    <button type="submit">koszyk</button>
+</form>
+<a href="/">Wróć</a>
+<h2>EDYCJA</h2>
+<ul>
+    <% products.forEach(prod => { %>
+        <li><%= prod.nazwa %> - <%= prod.cena %> PLN</li>
+        <form action="/products/<%= prod.id %>" method="GET" style="display: inline">
+            <button type="submit">About</button>
+        </form>
+        <form id="editForm" action="/admin/<%= prod.id %>" method="POST">
+            <label for="price">Cena:</label>
+            <input type="float" id="price_<%= prod.id %>" name="price">
+            <label for="stan">Ilosc:</label>
+            <input type="Int" id="stan_<%= prod.id %>" name="stan">
+            <label for="name">Nazwa:</label>
+            <input type="text" id="name_<%= prod.id %>" name="name">
+            <label for="type">Rodzaj:</label>
+            <select id="type_<%= prod.id %>" name="type">
+            <option value="ogrodowe">Ogrodowe</option>
+            <option value="domowe">Domowe</option>
+            <option value="akcesoria">Akcesoria</option>
+            </select>
+            <button type="button" onclick="updateProd('<%= prod.id %>')">Zmień</button>
+            <button type="button" onclick="delProd('<%= prod.id %>')">Usuń</button>
+        </form>
+    <% }) %>
+    <form id="addForm" action="/admin" method="POST">
+        <label for="price2">Cena:</label>
+        <input type="float" id="price2" name="price2">
+        <label for="stan2">Ilosc:</label>
+        <input type="Int" id="stan2" name="stan2">
+        <label for="name2">Nazwa:</label>
+        <input type="text" id="name2" name="name2">
+        <label for="type2">Rodzaj:</label>
+        <select id="type2" name="type2">
+        <option value="ogrodowe">Ogrodowe</option>
+        <option value="domowe">Domowe</option>
+        <option value="akcesoria">Akcesoria</option>
+        </select>
+        <button type="submit" >Dodaj</button>
+    </form>
+</ul>
+
+
+<script>
+    document.getElementById('addForm').addEventListener('submit', function(event) {
+        event.preventDefault(); 
+        
+        const priceElement = document.getElementById(`price2`);
+        const priceValue = priceElement.value;
+
+        const typeElement = document.getElementById(`type2`);
+        const typeValue = typeElement.value;
+
+        const nameElement = document.getElementById(`name2`);
+        const nameValue = nameElement.value;
+
+        const stanElement = document.getElementById(`stan2`);
+        const stanValue = stanElement.value;
+        const form = this;
+            
+            fetch(form.action, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nazwa:nameValue,
+                    cena:priceValue,
+                    ilosc:stanValue,
+                    rodzaj:typeValue
+             })
+            })
+            .then(response => {
+                if (response.ok || response.redirected) {
+                    window.location.reload() 
+                } else {
+                    throw new Error('Failed to comment post');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating post:', error);
+            });
+        
+    });
+</script>
+
+
+<script>
+    function updateProd(prodId) {
+    const priceElement = document.getElementById(`price_${prodId}`);
+    const priceValue = priceElement.value;
+
+    const typeElement = document.getElementById(`type_${prodId}`);
+    const typeValue = typeElement.value;
+
+    const nameElement = document.getElementById(`name_${prodId}`);
+    const nameValue = nameElement.value;
+
+    const stanElement = document.getElementById(`stan_${prodId}`);
+    const stanValue = stanElement.value;
+
+    // Make the PUT request using fetch
+    fetch(`/admin/${prodId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nazwa: nameValue,
+            cena: priceValue,
+            ilosc: stanValue,
+            rodzaj: typeValue
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Update the HTML elements with the new values
+            priceElement.textContent = priceValue;
+            typeElement.textContent = typeValue;
+            nameElement.textContent = nameValue;
+            stanElement.textContent = stanValue;
+            window.location.reload();
+        } else {
+            console.error('Failed to update value');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+
+
+
+
+
+</body>
+</html>

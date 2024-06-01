@@ -10,19 +10,19 @@ rodzaj - domowe, ogrodowe, akcesoria
 SZABLONY
 
 HOME - WYSWIETLANIE TOWAROW 
-    1) Dodawanie towaru do koszyka
+    1) Dodawanie towaru do koszyka git 
     2) wyswietlenie prywatnej strony towaru z Opiniami
     3) Zalogowaanie, Zajerestrowanie
     
 Towar/:id - PRYWATNE STRONY TOWAROW
-    1) Dodanie towaru do koszyka
+    1) Dodanie towaru do koszyka git
     2) Czytanie opinii
     3) jesli jest zalogowany moze dodaac opinie
 
 Koszyk - WYSWIETLANIE KOSZYKA
     1) usuniecie towaru 
     2) zatwierdzenie zakupu
-    3) zwiekszenie ilosci towaru??
+    3) zwiekszenie ilosci towaru git
 
 Login - LOGOWANIE
     1)sprawdzenie zgodnosci hasla 

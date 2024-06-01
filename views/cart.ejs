@@ -9,16 +9,19 @@
 <h2>Koszyk</h2>
 <ul>
     <% cart.forEach(prod => { %>
-        <li><%= prod.nazwa %> - <%= prod.cena %> PLN - <%= prod.ilosc %> szt </li>
-        <form id="changeInCart" action="/cart/<%= prod.id %>" method="POST" style="display: inline">
-            <label for="ilosc">Wybierz ilość:</label>
-            <select name="ilosc" id="ilosc">
-                <% for (let i = 1; i <= prod.ilosc; i++) { %>
-                    <option value="<%= i %>"><%= i %></option>
-                <% } %>
-            </select>
-            <button type="submit">Zmien</button>
-        </form>
+        <li>
+            <%= prod.nazwa %> - <%= prod.cena %> PLN - <span id="ilosc_<%= prod.id %>"><%= prod.ilosc %> szt</span>
+            <form id="updateTheValues_<%= prod.id %>" style="display: inline">
+                <label for="ilosc">Wybierz ilość:</label>
+                <select id="iloscSelect_<%= prod.id %>" name="iloscSelect">
+                    <% for (let i = 1; i <= prod.ilosc; i++) { %>
+                        <option value="<%= i %>"><%= i %></option>
+                    <% } %>
+                </select>
+                <input type="hidden" id="selectedValue_<%= prod.id %>" name="selectedValue">
+                <button type="button" onclick="updateValue('<%= prod.id %>')">Zmień</button>
+            </form>
+        </li>
     <% }) %>
 </ul>
 
@@ -29,3 +32,36 @@
 
 
 
+<script>
+    function updateValue(prodId) {
+        const selectElement = document.getElementById(`iloscSelect_${prodId}`);
+        const selectedValue = selectElement.value;
+        const quantitySpan = document.getElementById(`ilosc_${prodId}`);
+        const selectedValueInput = document.getElementById(`selectedValue_${prodId}`);
+
+        // Update the quantity span with the selected value
+        quantitySpan.textContent = `${selectedValue} szt`;
+
+        // Update the hidden input field with the selected value
+        selectedValueInput.value = selectedValue;
+
+        // Make the PUT request using fetch
+        fetch(`/cart/${prodId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ilosc:selectedValue })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Value updated successfully');
+            } else {
+                console.error('Failed to update value');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>

@@ -11,15 +11,40 @@
 <p>Cena: <%= product.cena %> PLN</p>
 <p>Rodzaj: <%= product.rodzaj %></p>
 
-<form id="addToCart" action="/products/<%= product.id %>" method="POST" style="display: inline">
-    <p>Dostępna ilość: <%= product.ilosc %> sztuk</p>
-    <label for="ilosc">Wybierz ilość:</label>
-    <select name="ilosc" id="ilosc">
-        <% for (let i = 1; i <= product.ilosc; i++) { %>
-            <option value="<%= i %>"><%= i %></option>
-        <% } %>
-    </select>
-    <button type="submit">Dodaj</button>
-</form>
+<p>Dostępna ilość:<span id="iloscSpan"> <%= product.ilosc %> sztuk </span> </p>
+<label for="ilosc">Wybierz ilość:</label>
+<select name="ilosc" id="ilosc">
+    <% for (let i = 1; i <= product.ilosc; i++) { %>
+        <option value="<%= i %>"><%= i %></option>
+    <% } %>
+</select>
+<button type="button" onclick="updateQuantity('<%= product.id %>', '<%= product.ilosc %>')">Dodaj</button>
 
+<script>
+    function updateQuantity(productId, initialQuantity) {
+        const quantitySelect = document.getElementById('ilosc');
+        const selectedQuantity = quantitySelect.value;
+        const quantitiSpan = document.getElementById('iloscSpan');
+        const newQuantity = initialQuantity - selectedQuantity;
+        quantitiSpan.textContent = `${newQuantity} sztuk`;
+        
+        fetch(`/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ilosc: newQuantity })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Quantity updated successfully');
+            } else {
+                console.error('Failed to update quantity');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
 

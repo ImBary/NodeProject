@@ -12,7 +12,7 @@ const checkProductQuantity = async (req, res, next) => {
 
     try {
         const prods = await api.getProductById(prodId);
-        const prod = prods[0];
+        let prod = prods[0];
         const cartProd = await api.getProdFromCartByProdId(prodId);
         const cProd = cartProd[0]
         
@@ -25,10 +25,12 @@ const checkProductQuantity = async (req, res, next) => {
             return res.status(400).send(`Requested quantity exceeds available stock. Available: ${prod.ilosc}`);
         }
         const prodNew = Number(prod.ilosc) - (Number(ilosc))
-        if(ilosc=='Number' || ilosc>0){
+        if(ilosc=='Number' || ilosc>=0){
             await api.updateCountOfProducts(prodId,prodNew);
-            console.log("req body"+ req.ilosc);
+            const afterUpdate = await api.getProductById(prodId);
+            prod = afterUpdate[0];
             req.ilosc = Number(ilosc) + Number(cProd.ilosc);
+            console.log("req body"+ req.ilosc);
         }else{
             req.ilosc = 0;
         }
@@ -73,14 +75,52 @@ const checkQuantityOfCartProduct = async(req,res,next)=>{
     if(Number(ilosc)>Number(product.ilosc)){
         res.status(400,"Error, nie ma tylu produktów.")
     }
-
-    const newValue = Number(product.ilosc)-Number(ilosc);
+    
+    const newAdd = Number(product.ilosc)-Number(ilosc);
+    
+    req.newAdd = Number(newAdd);
+    const newValue = Number(ilosc);
     req.newValue = newValue;
     req.prodId = prodId-1;
     next();
 }
 
+const checkValidInput = async (req, res, next) => {
+    const { nazwa, cena, ilosc, rodzaj } = req.body;
+    console.log("im here");
+
+    if (!nazwa) {
+        console.log("zla nazwa");
+        return res.status(400).json({ error: "Error: pusta nazwa" });
+    }
+
+    const regex = /^\d{1,10}\.\d{2}$/;
+    if (!regex.test(cena)) {
+        console.log("regex");
+        return res.status(500).json({ error: "Error: cena w złym formacie" });
+    }
+
+    if (ilosc < 0) {
+        console.log("ilosc");
+        return res.status(400).json({ error: "Error ilosc nie moze byc mniejsza od zera" });
+    }
+
+    const opcje = ["ogrodowe", "domowe", "akcesoria"];
+    if (!opcje.includes(rodzaj)) {
+        console.log("ogrody");
+        return res.status(404).json({ error: "nie znaleziono takiego rodzaju" });
+    }
+
+    console.log("przeszlo");
+    req.nazwa = nazwa;
+    req.cena = cena;
+    req.ilosc = ilosc;
+    req.rodzaj = rodzaj;
+    next();
+};
+
 module.exports={
+    checkValidInput,
     checkQuantityOfCartProduct,
     handleUser,
     checkProductQuantity

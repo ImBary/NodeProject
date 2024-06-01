@@ -3,9 +3,12 @@ const app = express();
 const api = require('./api');
 const mw = require('./middlewares');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const session = require('express-session');
 require('dotenv').config();
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.json());
 app.use(session({
@@ -21,6 +24,45 @@ app.use(mw.handleUser);
 
 
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/admin',async (req,res)=>{
+    userName= req.userName;
+    const products = await api.getProducts(); // Pobieranie użytkowników z bazy danych
+    console.log("app: "+JSON.stringify(products));
+    res.render('admin', { products, userName });
+})
+
+app.post('/admin',mw.checkValidInput,async(req,res)=>{
+    console.log("jestem")
+    if(req.userName==='Admin'){
+        const prod = {
+            nazwa:req.nazwa,
+            cena:req.cena,
+            ilosc:req.ilosc,
+            rodzaj:req.rodzaj
+        }
+        await api.createProduct(prod);
+        console.log("Produkt Dodany")
+        res.sendStatus(200);
+    }
+})
+
+app.put('/admin/:id',mw.checkValidInput,async (req,res)=>{
+    console.log('tutaj')
+    if(req.userName==='Admin'){
+        const id = req.params.id;
+        const prod = {
+            nazwa:req.nazwa,
+            cena:req.cena,
+            ilosc:req.ilosc,
+            rodzaj:req.rodzaj
+        }
+        await api.updateProduct(id,prod);
+        console.log("admin")
+        res.sendStatus(200);
+    }
+    
+})
 
 app.get('/login', (req, res) => {
     res.render('login');  // Wyświetl formularz logowania
@@ -75,7 +117,7 @@ app.get('/products/:id',async(req,res)=>{
     }
 })
 
-app.post('/products/:id', mw.checkProductQuantity, async (req, res) => {
+app.put('/products/:id', mw.checkProductQuantity, async (req, res) => {
     
     const userName = req.userName;
 
@@ -126,13 +168,18 @@ app.get('/cart',async (req,res)=>{
 
 })
 
-app.post('/cart/:id',mw.checkQuantityOfCartProduct,async (req,res)=>{
+app.put('/cart/:id',mw.checkQuantityOfCartProduct,async (req,res)=>{
     const userName = req.userName;
     if(userName!=='Nieznajomy'){
         const ilosc = req.newValue;
         const prodId = req.prodId;
         await api.updateCountOfProductsInCart(prodId,ilosc);
         console.log("zmieniona wartosc w koszyku, id:"+prodId +" ilosc: "+ilosc)
+        const product = await api.getProductById(prodId)
+        const prod = product[0]
+        const newAdd = req.newAdd+prod.ilosc
+        console.log("new value "+newAdd)
+        await api.updateCountOfProducts(prodId,newAdd);
     }
 })
 

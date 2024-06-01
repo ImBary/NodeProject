@@ -48,7 +48,6 @@ const updateCountOfProductsInCart = async(prodId,newValue)=>{
    
     return await knex('cart').where('productId',prodId).update('ilosc',newValue);
     
-    
 }
 
 const updateCountOfProducts = async (prodId,newValue)=>{
@@ -59,6 +58,12 @@ const updateCountOfProducts = async (prodId,newValue)=>{
     }
 }
 
+const updateProduct = async(prodId,newProduct)=>{
+   
+    return await knex('products').where('id',prodId).update(newProduct);
+    
+}
+
 const deleteFromCart = async (prodId)=>{
     try{
         return await knex('cart').delete().where('id',prodId);
@@ -67,7 +72,13 @@ const deleteFromCart = async (prodId)=>{
     }
 }
 
+const createProduct = async(product)=>{
+    return await knex('products').insert(product);
+}
+
 module.exports = {
+    createProduct,
+    updateProduct,
     deleteFromCart,
     getProdFromCartByUserId ,
     updateCountOfProducts,
