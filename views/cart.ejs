@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Twój koszyk</title>
+</head>
+<body>
+<a href="/">Wróć</a>
+<h2>Koszyk</h2>
+<ul>
+    <% cart.forEach(prod => { %>
+        <li><%= prod.nazwa %> - <%= prod.cena %> PLN - <%= prod.ilosc %> szt </li>
+        <form id="changeInCart" action="/cart/<%= prod.id %>" method="POST" style="display: inline">
+            <label for="ilosc">Wybierz ilość:</label>
+            <select name="ilosc" id="ilosc">
+                <% for (let i = 1; i <= prod.ilosc; i++) { %>
+                    <option value="<%= i %>"><%= i %></option>
+                <% } %>
+            </select>
+            <button type="submit">Zmien</button>
+        </form>
+    <% }) %>
+</ul>
+
+<form action="/" method="GET" style="display: inline">
+    <a>Cena całości: <%= sumPrice%> PLN</a>
+    <button type="submit">Kup</button>
+</form>
+
+
+

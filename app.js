@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const api = require('./api');
+const mw = require('./middlewares');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 require('dotenv').config();
@@ -15,6 +16,9 @@ app.use(session({
 }));
 
 app.set('view engine', 'ejs');
+
+app.use(mw.handleUser);
+
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -47,13 +51,7 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/', async (req, res) => {
-    let userName = 'Nieznajomy'; // Domyślna wartość, jeśli nie ma sesji ani ciasteczka
-    if (req.session.user) {
-        userName = req.session.user; // Użyj nazwy z sesji, jeśli dostępna
-    } else if (req.cookies.username) {
-        userName = req.cookies.username; // Użyj nazwy z ciasteczka, jeśli sesja nie istnieje
-        req.session.user = userName; // Odtwórz sesję z ciasteczka
-    }
+    const userName = req.userName
     try {
         const products = await api.getProducts(); // Pobieranie użytkowników z bazy danych
         console.log("app: "+JSON.stringify(products));
@@ -63,5 +61,79 @@ app.get('/', async (req, res) => {
         res.status(500).send('Błąd serwera');
     }
 });
+
+app.get('/products/:id',async(req,res)=>{
+    const productId = req.params.id;
+    const usrName = req.userName;
+    try{
+        const prod = await api.getProductById(productId);
+        const opinions = await api.getOpinionsByProductId(productId);
+        res.render('product',{product:prod[0],opinions})
+
+    }catch(err){
+        throw new Error(err);
+    }
+})
+
+app.post('/products/:id', mw.checkProductQuantity, async (req, res) => {
+    
+    const userName = req.userName;
+
+    try {
+        if (userName === 'Nieznajomy') {
+            res.redirect('/');
+        } else {
+            const userId = await api.getUserIdByUserName(userName);
+            console.log(JSON.stringify(userId));
+            console.log(userId[0].id);
+            const prod = req.product; //produkt z middleweare
+            const ilosc = req.ilosc;
+            const prodId=req.prodId;
+            console.log("ilosc: "+ilosc)
+            console.log("prod z mw: "+JSON.stringify(prod));
+            const cartProd = { nazwa: prod.nazwa, cena: prod.cena, ilosc: ilosc, userId: userId[0].id, productId: prodId };
+            console.log("cart Prod: "+cartProd)
+            if ((await api.getProdFromCartByProdId(prodId)).length>0) {
+                // juz jest w koszyku
+                const iloscKoszyka = req.ilosc
+                await api.updateCountOfProductsInCart(prodId, iloscKoszyka);
+                console.log("zmiena ilosci");
+                
+            } else {
+                await api.addProductToCart(cartProd);
+                console.log("Koszyk dodano: " + JSON.stringify(cartProd));
+                
+            }
+        }
+    } catch (err) {
+        console.error("Error: ", err);
+        res.status(500).send("ERROR");
+    }
+});
+
+
+app.get('/cart',async (req,res)=>{
+    const userName = req.userName;
+    if(userName!=='Nieznajomy'){
+        const userId = await api.getUserIdByUserName(userName);
+        const id = userId[0].id;
+        const cart = await api.getProdFromCartByUserId(id);
+        const sumPrice = cart.reduce((sum,prod)=> sum + (prod.cena * prod.ilosc),0);
+        res.render('cart',{cart,sumPrice})
+    }else{
+        res.redirect('/login');
+    }
+
+})
+
+app.post('/cart/:id',mw.checkQuantityOfCartProduct,async (req,res)=>{
+    const userName = req.userName;
+    if(userName!=='Nieznajomy'){
+        const ilosc = req.newValue;
+        const prodId = req.prodId;
+        await api.updateCountOfProductsInCart(prodId,ilosc);
+        console.log("zmieniona wartosc w koszyku, id:"+prodId +" ilosc: "+ilosc)
+    }
+})
 
 app.listen(3000, () => console.log('Server running on port 3000 '));

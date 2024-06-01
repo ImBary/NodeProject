@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PRODUCT</title>
+</head>
+<body>
+<a href="/">Wróć</a>
+<h2>PRODUCT</h2>
+<p>Nazwa: <%= product.nazwa %></p>
+<p>Cena: <%= product.cena %> PLN</p>
+<p>Rodzaj: <%= product.rodzaj %></p>
+
+<form id="addToCart" action="/products/<%= product.id %>" method="POST" style="display: inline">
+    <p>Dostępna ilość: <%= product.ilosc %> sztuk</p>
+    <label for="ilosc">Wybierz ilość:</label>
+    <select name="ilosc" id="ilosc">
+        <% for (let i = 1; i <= product.ilosc; i++) { %>
+            <option value="<%= i %>"><%= i %></option>
+        <% } %>
+    </select>
+    <button type="submit">Dodaj</button>
+</form>
+
+
