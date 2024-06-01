@@ -47,6 +47,16 @@ app.post('/admin',mw.checkValidInput,async(req,res)=>{
     }
 })
 
+app.delete('/admin/:id',mw.checkValidDel,async (req,res)=>{
+    console.log('tutaj del')
+    if(req.userName==='Admin'){
+        const id = req.id;
+        await api.deleteProductById(id);
+        console.log("admin del")
+        res.sendStatus(200);
+    }
+    
+})
 app.put('/admin/:id',mw.checkValidInput,async (req,res)=>{
     console.log('tutaj')
     if(req.userName==='Admin'){

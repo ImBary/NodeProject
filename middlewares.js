@@ -119,7 +119,18 @@ const checkValidInput = async (req, res, next) => {
     next();
 };
 
+const checkValidDel = async (req,res,next)=>{
+    const prodId = req.params.id;
+    const isHere = await api.getProductById(prodId);
+    if(!isHere || isHere.length<1){
+        return res.status(404).json({error: "nie znaleziono takiego produktu"})
+    }
+    req.id = prodId;
+    next()
+}
+
 module.exports={
+    checkValidDel,
     checkValidInput,
     checkQuantityOfCartProduct,
     handleUser,

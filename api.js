@@ -75,8 +75,12 @@ const deleteFromCart = async (prodId)=>{
 const createProduct = async(product)=>{
     return await knex('products').insert(product);
 }
+const deleteProductById = async(prodId)=>{
+    return await knex('products').delete().where('id',prodId)
+}
 
 module.exports = {
+    deleteProductById,
     createProduct,
     updateProduct,
     deleteFromCart,
