@@ -1,93 +1,131 @@
 const express = require('express');
 const app = express();
-const api = require('./api');
-const mw = require('./middlewares');
+const api = require('./api')
+const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
 const session = require('express-session');
-require('dotenv').config();
+const mw = require('./middleware');
+const bcrypt = require('bcrypt');
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.json());
+
+
+const passport = require('passport');
+const initializePassport = require('./config/passport-config');
+const { json } = require('body-parser');
+
+
+initializePassport(
+    passport,
+    async (username) => await api.getUserIdByUsersName(username),
+    async (id) => await api.getUserById(id)  // You need to implement this in your API
+);
+
 app.use(session({
-    secret: 'secret',
+    secret: 'secret strong key for login',
     resave: false,
-    saveUninitialized: true,
-    cookie: { secret: false }
+    saveUninitialized: false,
+    cookie: { secure: false } 
 }));
-
-app.set('view engine', 'ejs');
-
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash()); 
 app.use(mw.handleUser);
+app.set('view engine','ejs');
+app.use(express.urlencoded( {extended: true}));
 
 
-app.use(express.urlencoded({ extended: true }));
+app.post('/posts', async (req,res)=>{
 
-app.get('/admin',async (req,res)=>{
-    userName= req.userName;
-    const products = await api.getProducts(); // Pobieranie użytkowników z bazy danych
-    console.log("app: "+JSON.stringify(products));
-    res.render('admin', { products, userName });
-})
-
-app.post('/admin',mw.checkValidInput,async(req,res)=>{
-    console.log("jestem")
-    if(req.userName==='Admin'){
-        const prod = {
-            nazwa:req.nazwa,
-            cena:req.cena,
-            ilosc:req.ilosc,
-            rodzaj:req.rodzaj
+    const {title, content} = req.body;
+    const userName = req.userName;
+    try{
+        if(userName == "nieznajomy"){
+            return res.redirect('/login');
         }
-        await api.createProduct(prod);
-        console.log("Produkt Dodany")
-        res.sendStatus(200);
-    }
-})
-
-app.delete('/admin/:id',mw.checkValidDel,async (req,res)=>{
-    console.log('tutaj del')
-    if(req.userName==='Admin'){
-        const id = req.id;
-        await api.deleteProductById(id);
-        console.log("admin del")
-        res.sendStatus(200);
-    }
-    
-})
-app.put('/admin/:id',mw.checkValidInput,async (req,res)=>{
-    console.log('tutaj')
-    if(req.userName==='Admin'){
-        const id = req.params.id;
-        const prod = {
-            nazwa:req.nazwa,
-            cena:req.cena,
-            ilosc:req.ilosc,
-            rodzaj:req.rodzaj
+        const userId = await api.getUserIdByUsersName(userName);
+        if(userId.length===0){
+            return res.redirect('/login');
         }
-        await api.updateProduct(id,prod);
-        console.log("admin")
-        res.sendStatus(200);
+        
+        const usrPost = {title:title,content:content,userId:userId[0].id};
+        await api.createPost(usrPost);
+        res.redirect('/');
+    }catch(err){
+        console.error(err);
+        res.status(500).send('Error adding user');
     }
-    
-})
+});
+
+app.get('/',async (req,res)=>{
+    const userName = req.userName 
+    try{
+        console.log(userName);
+        const posts = await api.getPosts();
+        res.render('index',{posts,userName});
+    }catch(err){
+        console.error(err);
+        res.status(500).send('Błąd serwera DUPA');
+    }
+});
 
 app.get('/login', (req, res) => {
-    res.render('login');  // Wyświetl formularz logowania
+    res.render('login', { message: req.flash('error') });
 });
 
-app.post('/login', (req, res) => {
-    const { username } = req.body;
-    req.session.user = username; // Przechowaj nazwę użytkownika w sesji
-    res.cookie('username', username, { maxAge: 900000, httpOnly: true }); // Ustaw ciasteczko
-    res.redirect('/');
-});
-
-app.get('/register', (req, res) => {
+app.get('/register',(req,res)=>{
     res.render('register');
 });
+
+app.post('/register', async (req, res) => {
+    const { username, code } = req.body;
+
+    try {
+        const isInBase = await api.getUserIdByUsersName(username);
+
+        if (isInBase.length > 0) {
+            req.flash('error', 'Username already exists');
+            return res.redirect('/login');
+        } else {
+            const saltRounds = 10; // Increase this value for stronger hashing
+            const hashedCode = await bcrypt.hash(code, saltRounds);
+
+            const newUser = { name: username, code: hashedCode };
+            await api.createUsers(newUser);
+            req.session.user = username;
+            res.cookie('username', username, { maxAge: 9999, httpOnly: true });
+            res.redirect('/');
+        }
+    } catch (err) {
+        console.error('Error registering user:', err);
+        res.status(500).send('Failed to register user');
+    }
+});
+
+app.post('/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            req.flash('error', 'Invalid username or password');
+            return res.redirect('/login');
+        }
+        req.logIn(user, (err) => {
+            if (err) {
+                return next(err);
+            }
+            console.log("Authenticated user object:", user); // Log the entire user object
+            req.session.user = user.name; // Store username in session
+            console.log("this: " + user.name); // Log the username
+
+            res.cookie('username', user.name, { maxAge: 900000, httpOnly: true });
+            return res.redirect('/');
+        });
+    })(req, res, next);
+});
+
 
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
@@ -101,96 +139,155 @@ app.get('/logout', (req, res) => {
     });
 });
 
+app.delete('/comments/:id', async (req, res) => {
+    const commentId = req.params.id;
 
-app.get('/', async (req, res) => {
-    const userName = req.userName
     try {
-        const products = await api.getProducts(); // Pobieranie użytkowników z bazy danych
-        console.log("app: "+JSON.stringify(products));
-        res.render('home', { products, userName }); // Przekazanie użytkowników i nazwy użytkownika do szablonu
+        await api.deleteCommentById(commentId);
+        res.sendStatus(200);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Błąd serwera');
+        console.error('Error deleting comment:', error);
+        res.sendStatus(500);
     }
 });
 
-app.get('/products/:id',async(req,res)=>{
-    const productId = req.params.id;
-    const usrName = req.userName;
-    try{
-        const prod = await api.getProductById(productId);
-        const opinions = await api.getOpinionsByProductId(productId);
-        res.render('product',{product:prod[0],opinions})
 
+app.get('/posts/:id', async (req,res)=>{
+    const postId = req.params.id;
+    let usrName = 'nieznajomy'
+    if(req.session.user){
+        usrName = req.session.user;
+    }else if(req.cookies.userName){
+        usrName = req.cookies.usrname;
+        req.session.user = usrName;
+    }
+    try{
+        const user = await api.getUserIdByUsersName(usrName);
+        const dbPost = await api.getPostById(postId);
+        const dbComments = await api.getCommentsByPostId(postId);
+        if(!dbPost || dbPost===1){
+            return res.redirect('/')
+        }
+        const post = dbPost[0];
+        if(usrName!=='nieznajomy'){
+            let loggedInUserId = user[0].id;
+            console.log(JSON.stringify(dbComments));
+            res.render('post',{post:post,dbComments,loggedInUserId});
+        }else if (usrName==='nieznajomy'){
+            let loggedInUserId = 0;
+            console.log(JSON.stringify(dbComments));
+            res.render('post',{post:post,dbComments,loggedInUserId});
+        }
+        
     }catch(err){
         throw new Error(err);
     }
+    
 })
 
-app.put('/products/:id', mw.checkProductQuantity, async (req, res) => {
-    
-    const userName = req.userName;
+app.post('/post/:id', async (req, res) => {
+    const postId = req.params.id;
+    console.log("comment postId: " + postId);
+    const { comment } = req.body;
+    console.log("comment: " + comment);
+    let usrName = 'nieznajomy';
+    if (req.session.user) {
+        usrName = req.session.user;
+    } else if (req.cookies.userName) {
+        usrName = req.cookies.usrname;
+        req.session.user = usrName;
+    }
+    const user = await api.getUserIdByUsersName(usrName);
+    console.log("comment userId: " + usrName);
 
     try {
-        if (userName === 'Nieznajomy') {
-            res.redirect('/');
-        } else {
-            const userId = await api.getUserIdByUserName(userName);
-            console.log(JSON.stringify(userId));
-            console.log(userId[0].id);
-            const prod = req.product; //produkt z middleweare
-            const ilosc = req.ilosc;
-            const prodId=req.prodId;
-            console.log("ilosc: "+ilosc)
-            console.log("prod z mw: "+JSON.stringify(prod));
-            const cartProd = { nazwa: prod.nazwa, cena: prod.cena, ilosc: ilosc, userId: userId[0].id, productId: prodId };
-            console.log("cart Prod: "+cartProd)
-            if ((await api.getProdFromCartByProdId(prodId)).length>0) {
-                // juz jest w koszyku
-                const iloscKoszyka = req.ilosc
-                await api.updateCountOfProductsInCart(prodId, iloscKoszyka);
-                console.log("zmiena ilosci");
-                
-            } else {
-                await api.addProductToCart(cartProd);
-                console.log("Koszyk dodano: " + JSON.stringify(cartProd));
-                
-            }
+        if (usrName === 'nieznajomy' && comment != null && comment.length >= 1) {
+            const comN = { UserId: 0, comment: comment, PostId: postId, userName: usrName };
+            await api.createCommentToPost(comN);
+        } else if (usrName !== 'nieznajomy' && comment != null && comment.length >= 1) {
+            const com = { UserId: user[0].id, comment: comment, PostId: postId, userName: usrName };
+            await api.createCommentToPost(com);
         }
-    } catch (err) {
-        console.error("Error: ", err);
-        res.status(500).send("ERROR");
+
+        res.sendStatus(200); 
+    } catch (error) {
+        console.error("Error creating comment:", error);
+        res.sendStatus(500); 
     }
 });
 
-
-app.get('/cart',async (req,res)=>{
-    const userName = req.userName;
-    if(userName!=='Nieznajomy'){
-        const userId = await api.getUserIdByUserName(userName);
-        const id = userId[0].id;
-        const cart = await api.getProdFromCartByUserId(id);
-        const sumPrice = cart.reduce((sum,prod)=> sum + (prod.cena * prod.ilosc),0);
-        res.render('cart',{cart,sumPrice})
-    }else{
-        res.redirect('/login');
+app.delete('/posts/:id', async (req, res) => {
+    const postId = req.params.id;
+    let usrName = 'nieznajomy'
+    if(req.session.user){
+        usrName = req.session.user;
+    }else if(req.cookies.userName){
+        usrName = req.cookies.usrname;
+        req.session.user = usrName;
     }
+    const postToDelete = await api.getPostById(postId);
+    const user = await api.getUserIdByUsersName(usrName);
+    console.log("postToDelete: "+postToDelete[0]);
+    console.log("user "+user[0].id);
+    try {
 
+        if(user[0].id===postToDelete[0].userId){
+                const isDeleted = await api.deletePostById(postId);
+            if (isDeleted) {
+                console.log("bylem tu")
+                res.redirect('/');
+            } else {
+                res.status(500).send("Failed to delete post");
+            }
+        }else{
+            res.redirect('/');
+        }
+        
+        
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting post");
+    }
+});
+
+app.put('/post/:id',async (req,res)=>{
+    const postId = req.params.id;
+    console.log("update post ID: "+postId);
+    const { content,title} = req.body;
+    //console.log("req body1 "+req.body);
+    //console.log("req body "+req.body.content);
+    let userName = 'Nieznajomy';
+    //console.log("content: "+content);
+    if(req.session.user){
+        userName = req.session.user;
+    }else if(req.cookies.userName){
+        userName = req.cookies.username;
+        req.session.user = userName;
+    }
+    const postToUpdate = await api.getPostById(postId);
+    const userFromDb = await api.getUserIdByUsersName(userName); // corrected variable name
+    //console.log("update:",postToUpdate[0] );
+    //console.log("user:", userFromDb[0].id);
+    try {
+
+        if(userFromDb[0].id===postToUpdate[0].userId){
+            const isUpdated = await api.updatePostByUserId(postId,content,title);
+            if(isUpdated){
+                res.redirect('/');
+            }else{
+                res.status(500).send('udpating error');
+            }
+
+        }else{
+            res.redirect('/');
+        }
+        
+        
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting post");
+    }
 })
 
-app.put('/cart/:id',mw.checkQuantityOfCartProduct,async (req,res)=>{
-    const userName = req.userName;
-    if(userName!=='Nieznajomy'){
-        const ilosc = req.newValue;
-        const prodId = req.prodId;
-        await api.updateCountOfProductsInCart(prodId,ilosc);
-        console.log("zmieniona wartosc w koszyku, id:"+prodId +" ilosc: "+ilosc)
-        const product = await api.getProductById(prodId)
-        const prod = product[0]
-        const newAdd = req.newAdd+prod.ilosc
-        console.log("new value "+newAdd)
-        await api.updateCountOfProducts(prodId,newAdd);
-    }
-})
 
-app.listen(3000, () => console.log('Server running on port 3000 '));
+app.listen(3000,()=>{console.log("server on 3000");});

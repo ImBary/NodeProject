@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts List</title>
+</head>
+<body>
+
+
+<% if (userName && userName !== 'nieznajomy') { %>
+    <h1>Witaj, <%= userName %>!</h1>
+    <a href="/logout">Wyloguj</a>
+<% } else { %>
+    <a href="/login">Logowanie</a>
+<% } %>
+
+
+<h2>Create post</h2>
+<form action="/posts" method="POST">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+    <label for="content">Content:</label>
+    <input type="text" id="content" name="content" required>
+    <button type="submit">Create Post</button>
+</form>
+
+
+
+
+<h2>Posts Titles</h2>
+<ul>
+    <% posts.forEach(post => { %>
+        <li><%= post.title %> </li>
+        <form action="/posts/<%= post.id %>" method="GET" style="display: inline">
+            <button type="submit">View Post</button>
+        </form>
+    <% }) %>
+</ul>
+
+
+
+
+
+</body>
+</html>

@@ -5,12 +5,24 @@
     <title>Login</title>
 </head>
 <body>
-<a href="/">Wróć</a>
-<h2>Login</h2>
-<form action="/login" method="POST">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
-    <button type="submit">Login</button>
-</form>
+    <h2>Login</h2>
+    <form action="/login" method="POST" >
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        
+        <label for="code">Code:</label>
+        <input type="password" id="code" name="code" required>
+        
+        <% if (message.length > 0) { %>
+            <div class="alert alert-danger">
+                <%= message %>
+            </div>
+        <% } %>
+        <button type="submit">Login</button>
+    </form>
+    
+    <!-- Navigation buttons -->
+    <button onclick="window.location.href = '/register';">Register</button>
+    <button onclick="window.location.href = '/';">Main Page</button>
 </body>
 </html>
