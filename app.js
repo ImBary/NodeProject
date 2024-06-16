@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const api = require('./api')
+const api = require('./api/api')
 const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');

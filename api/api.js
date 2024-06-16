@@ -1,4 +1,4 @@
-const knex = require('knex')(require('./config/knexfile').development);
+const knex = require('knex')(require('../config/knexfile').development);
 
 const createPost = (post) => {
     return knex('posts').insert(post);

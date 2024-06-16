@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const api = require('./api');
+const api = require('./api/api');
 
 const handleUser = async (req, res, next) => {
     let userName = 'nieznajomy';

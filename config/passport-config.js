@@ -1,5 +1,5 @@
 const LocalStrategy = require('passport-local').Strategy;
-const api = require('../api'); // Import your API functions for database interactions
+const api = require('../api/api'); // Import your API functions for database interactions
 const bcrypt = require('bcrypt');
 function initialize(passport) {
     const authenticateUser = async (username, password, done) => {
