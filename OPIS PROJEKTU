@@ -55,7 +55,11 @@ __tests__ - testy dla funkcji api:
     1) getUserById
     2) createUsers
     //posts
-    3) deletePostById
-    4) createPost
-    5) updatePostByUserId
-    6) getPostByUserId
+    1) deletePostById
+    2) createPost
+    3) updatePostByUserId
+    4) getPostByUserId
+    //comments
+    1) createCommentToPost
+    2) deleteCommentById
+    3) getCommentsByPostId

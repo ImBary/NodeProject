@@ -6,6 +6,9 @@ jest.mock('../api/api', () => {
     const mockUpdatePostByUserId = jest.fn();
     const mockGetUserById = jest.fn();
     const mockGetPostByUserId = jest.fn();
+    const mockGetCommentsByPostId = jest.fn();
+    const mockCreateCommentToPost = jest.fn();
+    const mockDeleteCommentById = jest.fn();
 
     return {
       
@@ -14,7 +17,10 @@ jest.mock('../api/api', () => {
       createPost: mockCreatePost,
       createUsers: mockCreateUsers,
       getUserById:mockGetUserById, 
-      getPostByUserId:mockGetPostByUserId
+      getPostByUserId:mockGetPostByUserId,
+      getCommentsByPostId:mockGetCommentsByPostId,
+      createCommentToPost:mockCreateCommentToPost,
+      deleteCommentById:mockDeleteCommentById
     };
   });
 
@@ -24,7 +30,10 @@ jest.mock('../api/api', () => {
     deletePostById, //done
     createPost, //done
     createUsers,//done
-    getPostByUserId, //done
+    getPostByUserId,
+    getCommentsByPostId,
+    createCommentToPost,
+    deleteCommentById, //done
   } = require('../api/api');
   
   const mockUser = {
@@ -32,6 +41,14 @@ jest.mock('../api/api', () => {
     name:"Jhon",
     code:"Jhon2115",
   };
+
+  const mockComment ={
+    id:2115,
+    userName:"Jhon",
+    comment:"wow",
+    userId:123,
+    postId:15
+  }
 
   const mockPost={
     id:15,
@@ -120,4 +137,46 @@ jest.mock('../api/api', () => {
         });
       
     
+
+        describe('Comment API Functions', () => {
+            afterEach(() => {
+              jest.clearAllMocks();
+            });
+          
+            test('Save a comment to the database and retrieve it', async () => {
+                
+                
+                await createCommentToPost(mockComment);
+                expect(createCommentToPost).toHaveBeenCalledWith(mockComment);
+                
+                getCommentsByPostId.mockResolvedValue([mockComment]); 
+
+                const getCommentResult = await getCommentsByPostId(mockComment.postId);
+                //console.log(getPostResult)
+                expect(getCommentsByPostId).toHaveBeenCalledWith(mockComment.postId);
+                
+                expect(getCommentResult[0]).toEqual(mockComment); 
+               
+            });
+            test('Delete a comment from the database', async () => {
+                
+                
+                await createCommentToPost(mockComment);
+                expect(createCommentToPost).toHaveBeenCalledWith(mockComment);
+
+                await deleteCommentById(mockComment.id);
+                expect(deleteCommentById).toHaveBeenCalledWith(mockComment.id);
+                
+                getCommentsByPostId.mockResolvedValue([]); 
+
+                const getCommentResult = await getCommentsByPostId(mockComment.postId);
+                //console.log(getPostResult)
+                expect(getCommentsByPostId).toHaveBeenCalledWith(mockComment.postId);
+                
+                expect(getCommentResult.length).toBe(0); 
+               
+            });
+            
+            
+          });
   });
