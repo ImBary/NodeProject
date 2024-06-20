@@ -19,7 +19,7 @@ const { json } = require('body-parser');
 initializePassport(
     passport,
     async (username) => await api.getUserIdByUsersName(username),
-    async (id) => await api.getUserById(id)  // You need to implement this in your API
+    async (id) => await api.getUserById(id) 
 );
 
 app.use(session({
@@ -88,7 +88,7 @@ app.post('/register', async (req, res) => {
             req.flash('error', 'Username already exists');
             return res.redirect('/login');
         } else {
-            const saltRounds = 10; // Increase this value for stronger hashing
+            const saltRounds = 10; 
             const hashedCode = await bcrypt.hash(code, saltRounds);
 
             const newUser = { name: username, code: hashedCode };
@@ -116,9 +116,9 @@ app.post('/login', (req, res, next) => {
             if (err) {
                 return next(err);
             }
-            console.log("Authenticated user object:", user); // Log the entire user object
-            req.session.user = user.name; // Store username in session
-            console.log("this: " + user.name); // Log the username
+            console.log("Authenticated user object:", user); 
+            req.session.user = user.name; 
+            console.log("this: " + user.name); 
 
             res.cookie('username', user.name, { maxAge: 900000, httpOnly: true });
             return res.redirect('/');
@@ -133,8 +133,8 @@ app.get('/logout', (req, res) => {
             console.error('Błąd podczas niszczenia sesji', err);
             return res.status(500).send('Nie udało się wylogować');
         }
-        res.clearCookie('username'); // Usuń ciasteczko z nazwą użytkownika
-        res.clearCookie('connect.sid'); // Usuń ciasteczko sesji
+        res.clearCookie('username'); 
+        res.clearCookie('connect.sid');
         res.redirect('/');
     });
 });
@@ -254,10 +254,9 @@ app.put('/post/:id',async (req,res)=>{
     const postId = req.params.id;
     console.log("update post ID: "+postId);
     const { content,title} = req.body;
-    //console.log("req body1 "+req.body);
-    //console.log("req body "+req.body.content);
+    
     let userName = 'Nieznajomy';
-    //console.log("content: "+content);
+    
     if(req.session.user){
         userName = req.session.user;
     }else if(req.cookies.userName){
@@ -266,8 +265,7 @@ app.put('/post/:id',async (req,res)=>{
     }
     const postToUpdate = await api.getPostById(postId);
     const userFromDb = await api.getUserIdByUsersName(userName); // corrected variable name
-    //console.log("update:",postToUpdate[0] );
-    //console.log("user:", userFromDb[0].id);
+    
     try {
 
         if(userFromDb[0].id===postToUpdate[0].userId){

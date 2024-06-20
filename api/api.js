@@ -1,105 +1,189 @@
 const knex = require('knex')(require('../config/knexfile').development);
 
+// POSTS
+
+
 const createPost = (post) => {
-    return knex('posts').insert(post);
+    try{
+        return knex('posts').insert(post);
+    }catch(error){
+        console.error('Error creating Post', error);
+        throw error;
+    }
+    
 };
 
 const getPosts = () => {
-    return knex('posts').select('*');
+    try{
+        return knex('posts').select('*');
+    }catch(error){
+        console.error('Error geting Posts', error);
+        throw error;
+    }
+    
 };
+
+const getPostByUserId = (userId) =>{
+    
+    
+    try {
+        return knex('posts').select().where('userId',userId); 
+    } catch (error) {
+        console.error('Error getting Post by user id', error);
+        throw error; 
+    }
+};
+
+const getPostById = async (id)=>{
+
+    try {
+        const post = await knex('posts').select().where('id',id);
+        return post ? post : -1 ;
+    } catch (error) {
+        console.error('Error getting post by its id', error);
+        throw error; 
+    }
+
+}
+
+const deletePostById = async (id)=>{
+    try{
+        const isHere = await knex('posts').select().where('id',id);
+        if(isHere){
+        await knex('posts').delete().where('id',id);
+        await knex('comments').delete().where('PostId',id);
+            //console.log("deleted:" + isHere[0])
+        return isHere;
+        }else{
+            console.log("no post with this id")
+            return false;
+        }
+    }catch(error){
+        console.error('Error deleting post by its id', error);
+        throw error; 
+    }
+    
+}
+
+const updatePostByUserId = async(id,content,title) =>{
+    try{
+        const isHere = await knex('posts').select().where('id',id);
+        if(isHere){
+            await knex('posts').where('id',id).update('content',content);
+            await knex('posts').where('id',id).update('title',title);
+            console.log("im here "+ isHere);
+            return isHere;
+        }else{
+            console.log('no post with this id');
+            return false;
+        }
+    }catch(error){
+        console.error('Error updating post by user id', error);
+        throw error; 
+    }
+    
+
+
+}
+
+// USERS
 
 const createUsers = (user) => {
     console.log(user);
-    return knex('users').insert(user);
+    try{
+        return knex('users').insert(user);
+    }catch(error){
+        console.error('Error creating user', error);
+        throw error;
+    }
+    
 };
 
 const getUsers = () => {
-    return knex('users').select();
+    try{
+        return knex('users').select();
+    }catch(error){
+        console.error('Error getting users', error);
+        throw error;
+    }
+    
 };
 
 const getUserById = (id) => {
-    return knex('users').select().where('id', id);
+    
+    try{
+        return knex('users').select().where('id', id);
+    }catch(error){
+        console.error('Error getting user by id', error);
+        throw error;
+    }
 };
 
 const getUserByUsername = async (userName) => {
     try {
         const user = await knex('users').select().where('name', userName);
-        return user[0]; // Assuming you expect to find only one user with this username
+        return user[0];
     } catch (error) {
-        console.error('Error fetching user by username:', error);
-        throw error; // Rethrow the error to be handled elsewhere
+        console.error('Error getting user by his name ', error);
+        throw error;
     }
 }
-
-const getPostByUserId = (userId) =>{
-    return knex('posts').select().where('userId',userId);
-};
-
 
 const getUserIdByUsersName = async (userName) =>{
-    const userId = await knex('users').select('id').where('name',userName);
-    //console.log("api user id: " +userId[0]);
-    return userId ? userId : -1;
-}
-
-
-const getPostById = async (id)=>{
-
-    const post = await knex('posts').select().where('id',id);
-    console.log(post[0]);
-    return post ? post : -1 ;
-
-}
-
-const deletePostById = async (id)=>{
-    const isHere = await knex('posts').select().where('id',id);
-    if(isHere){
-       await knex('posts').delete().where('id',id);
-       await knex('comments').delete().where('PostId',id);
-        //console.log("deleted:" + isHere[0])
-       return isHere;
-    }else{
-        console.log("no post with this id")
-        return false;
+    
+    try {
+        const userId = await knex('users').select('id').where('name',userName);
+        return userId ? userId : -1;
+    } catch (error) {
+        console.error('Error getting user id  by username:', error);
+        throw error; 
     }
+    
 }
 
-const updatePostByUserId = async(id,content,title) =>{
-    const isHere = await knex('posts').select().where('id',id);
-    console.log('udpating');
-    if(isHere){
-        await knex('posts').where('id',id).update('content',content);
-        await knex('posts').where('id',id).update('title',title);
-        await console.log("im here "+ isHere);
-        return isHere;
-    }else{
-        console.log('no post with this id');
-        return false;
+const getCodeByUserName = async(userName)=>{
+    try{
+        const userCode =  await knex('users').select('code').where('name',userName);
+        return userCode ? userCode : -1;
+    }catch(error){
+        console.error('Error geting password by username ', error);
+        throw error; 
     }
-
-
+    
 }
+
+// COMMENTS
+
 
 const createCommentToPost = async(comment)=>{
     //console.log("api comment: "+comment);
-    return await knex('comments').insert(comment);
+    try{
+        return await knex('comments').insert(comment);
+    }catch(error){
+        console.error('Error creating comment to post ', error);
+        throw error; 
+    }
+    
 }
-
 
 const getCommentsByPostId = async(postId)=>{
-    return await knex('comments').select().where('PostId',postId);
-}
-
-
-
-
-const getCodeByUserName = async(userName)=>{
-    const userCode =  await knex('users').select('code').where('name',userName);
-    return userCode ? userCode : -1;
+    try{
+        return await knex('comments').select().where('PostId',postId);
+    }catch(error){
+        console.error('Error getting comment by post id ', error);
+        throw error; 
+    }
+    
 }
 
 const deleteCommentById = async(commentId)=>{
-    return await knex('comments').delete().where('id',commentId);
+    try{
+        return await knex('comments').delete().where('id',commentId);
+    }catch(error){
+        console.error('Error deeting comment by id ', error);
+        throw error; 
+    }
+    
 }
 
 
