@@ -61,9 +61,17 @@ app.post('/posts', async (req,res)=>{
 app.get('/',async (req,res)=>{
     const userName = req.userName 
     try{
-        console.log(userName);
         const posts = await api.getPosts();
-        res.render('index',{posts,userName});
+        const role = await api.getUserRole(userName);
+        console.log("role "+role);
+        if(role == "admin"){
+            const users = await api.getUsers();
+            res.render('admin',{posts,userName,users})
+        }else{
+            console.log(userName);
+            res.render('index',{posts,userName});
+        }
+       
     }catch(err){
         console.error(err);
         res.status(500).send('Błąd serwera DUPA');
@@ -154,13 +162,7 @@ app.delete('/comments/:id', async (req, res) => {
 
 app.get('/posts/:id', async (req,res)=>{
     const postId = req.params.id;
-    let usrName = 'nieznajomy'
-    if(req.session.user){
-        usrName = req.session.user;
-    }else if(req.cookies.userName){
-        usrName = req.cookies.usrname;
-        req.session.user = usrName;
-    }
+    const usrName = req.userName;
     try{
         const user = await api.getUserIdByUsersName(usrName);
         const dbPost = await api.getPostById(postId);
@@ -171,12 +173,14 @@ app.get('/posts/:id', async (req,res)=>{
         const post = dbPost[0];
         if(usrName!=='nieznajomy'){
             let loggedInUserId = user[0].id;
+            const userRole = await api.getUserRole(usrName);
             console.log(JSON.stringify(dbComments));
-            res.render('post',{post:post,dbComments,loggedInUserId});
+            res.render('post',{post:post,dbComments,loggedInUserId,userRole});
         }else if (usrName==='nieznajomy'){
             let loggedInUserId = 0;
+            const userRole = "user"
             console.log(JSON.stringify(dbComments));
-            res.render('post',{post:post,dbComments,loggedInUserId});
+            res.render('post',{post:post,dbComments,loggedInUserId,userRole});
         }
         
     }catch(err){
@@ -189,14 +193,7 @@ app.post('/post/:id', async (req, res) => {
     const postId = req.params.id;
     console.log("comment postId: " + postId);
     const { comment } = req.body;
-    console.log("comment: " + comment);
-    let usrName = 'nieznajomy';
-    if (req.session.user) {
-        usrName = req.session.user;
-    } else if (req.cookies.userName) {
-        usrName = req.cookies.usrname;
-        req.session.user = usrName;
-    }
+    const usrName = req.userName;
     const user = await api.getUserIdByUsersName(usrName);
     console.log("comment userId: " + usrName);
 
@@ -218,20 +215,15 @@ app.post('/post/:id', async (req, res) => {
 
 app.delete('/posts/:id', async (req, res) => {
     const postId = req.params.id;
-    let usrName = 'nieznajomy'
-    if(req.session.user){
-        usrName = req.session.user;
-    }else if(req.cookies.userName){
-        usrName = req.cookies.usrname;
-        req.session.user = usrName;
-    }
+    const usrName = req.userName;
     const postToDelete = await api.getPostById(postId);
     const user = await api.getUserIdByUsersName(usrName);
+    const role = await api.getUserRole(usrName);
     console.log("postToDelete: "+postToDelete[0]);
     console.log("user "+user[0].id);
     try {
 
-        if(user[0].id===postToDelete[0].userId){
+        if(user[0].id===postToDelete[0].userId || role === "admin"){
                 const isDeleted = await api.deletePostById(postId);
             if (isDeleted) {
                 console.log("bylem tu")
@@ -241,6 +233,7 @@ app.delete('/posts/:id', async (req, res) => {
             }
         }else{
             res.redirect('/');
+            
         }
         
         
@@ -255,14 +248,7 @@ app.put('/post/:id',async (req,res)=>{
     console.log("update post ID: "+postId);
     const { content,title} = req.body;
     
-    let userName = 'Nieznajomy';
-    
-    if(req.session.user){
-        userName = req.session.user;
-    }else if(req.cookies.userName){
-        userName = req.cookies.username;
-        req.session.user = userName;
-    }
+    const userName = req.userName;
     const postToUpdate = await api.getPostById(postId);
     const userFromDb = await api.getUserIdByUsersName(userName); // corrected variable name
     
@@ -287,5 +273,68 @@ app.put('/post/:id',async (req,res)=>{
     }
 })
 
+app.get('/admin/user/:id', async (req, res) => {
+    const userName = req.userName;
+    const userId = req.params.id;
+
+    const role = await api.getUserRole(userName);
+    if (role === "admin") {
+    
+        const userDb = await api.getUserById(userId);
+        const user = userDb[0];
+        const posts = await api.getPostsByUserId(userId);
+        const countOfPosts = posts.length;
+        const comments = await api.getCommentsByUserId(userId);
+        const countOfComments = comments.length;
+  
+        res.render("user", { user, posts, countOfPosts, comments , countOfComments});
+    } else {
+        
+        res.json({ message: "Only admins can view users", role });
+    }
+});
+
+app.delete('/admin/user/:id',async(req,res)=>{
+    const userName = req.userName;
+    const userId = req.params.id;
+    const role = await api.getUserRole(userName);
+
+    if(role === "admin"){
+        if(await api.deleteUserById(userId)==true){
+            res.redirect("/");
+        }else{
+            res.json({message:"Error finding the user"})
+        }
+    }else{
+        res.json({message:"Only admins can delete users"})
+    }
+
+})
+app.post('/admin/user/:id', async(req,res)=>{{
+    const userName = req.userName;
+    console.log("userName zmiana roli:"+userName)
+    const userId = req.params.id;
+    const role = await api.getUserRole(userName);
+
+    const userToChangeDb = await api.getUserById(userId);
+    const userToChange = userToChangeDb[0].role;
+    console.log("zmiana roli rolaa:"+role)
+    if(role === "admin"){
+        if(await api.changeUserRole(userId,userToChange)==true){
+            console.log("tutaj")
+            
+        }else{
+            res.json({message:"error changing role"})
+        }
+    }else{
+        res.json({message:"Only admins can change roles"})
+    }
+    
+}})
+app.post('/admin/change/:id',async(req,res)=>{
+    const role = await api.getUserRole("admin");
+    await api.changeUserRole("admin");
+    res.send(200);
+})
 
 app.listen(3000,()=>{console.log("server on 3000");});

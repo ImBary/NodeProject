@@ -1,11 +1,11 @@
-const knex = require('knex')(require('../config/knexfile').development);
+const knex = require('knex')(require('../knexfile').development);
 
 // POSTS
 
 
-const createPost = (post) => {
+const createPost = async (post) => {
     try{
-        return knex('posts').insert(post);
+        return await knex('posts').insert(post);
     }catch(error){
         console.error('Error creating Post', error);
         throw error;
@@ -13,9 +13,9 @@ const createPost = (post) => {
     
 };
 
-const getPosts = () => {
+const getPosts = async () => {
     try{
-        return knex('posts').select('*');
+        return await knex('posts').select('*');
     }catch(error){
         console.error('Error geting Posts', error);
         throw error;
@@ -23,7 +23,7 @@ const getPosts = () => {
     
 };
 
-const getPostByUserId = (userId) =>{
+const getPostsByUserId = (userId) =>{
     
     
     try {
@@ -46,14 +46,16 @@ const getPostById = async (id)=>{
 
 }
 
+
+
 const deletePostById = async (id)=>{
     try{
         const isHere = await knex('posts').select().where('id',id);
         if(isHere){
-        await knex('posts').delete().where('id',id);
-        await knex('comments').delete().where('PostId',id);
-            //console.log("deleted:" + isHere[0])
-        return isHere;
+            await knex('posts').delete().where('id',id);
+            await knex('comments').delete().where('PostId',id);
+                //console.log("deleted:" + isHere[0])
+            return isHere;
         }else{
             console.log("no post with this id")
             return false;
@@ -88,10 +90,10 @@ const updatePostByUserId = async(id,content,title) =>{
 
 // USERS
 
-const createUsers = (user) => {
+const createUsers = async (user) => {
     console.log(user);
     try{
-        return knex('users').insert(user);
+        return await knex('users').insert(user);
     }catch(error){
         console.error('Error creating user', error);
         throw error;
@@ -99,9 +101,27 @@ const createUsers = (user) => {
     
 };
 
-const getUsers = () => {
+const getUserRole = async (userName) => {
+    if(userName && userName != 'nieznajomy'){
+        try {
+            const result = await knex('users').select('role').where('name', userName);
+            console.log(JSON.stringify(result))
+            
+            const roleName = result[0].role;
+            console.log(roleName);
+            
+            return roleName;
+        } catch (error) {
+            console.error("Error getting user role", error);
+            throw error;
+        }
+    }
+    
+}
+
+const getUsers = async () => {
     try{
-        return knex('users').select();
+        return await knex('users').select();
     }catch(error){
         console.error('Error getting users', error);
         throw error;
@@ -109,10 +129,10 @@ const getUsers = () => {
     
 };
 
-const getUserById = (id) => {
+const getUserById = async (id) => {
     
     try{
-        return knex('users').select().where('id', id);
+        return await knex('users').select().where('id', id);
     }catch(error){
         console.error('Error getting user by id', error);
         throw error;
@@ -141,6 +161,25 @@ const getUserIdByUsersName = async (userName) =>{
     
 }
 
+const changeUserRole = async(userId,role)=>{
+    try{
+        
+        if(role === "admin"){
+            await knex('users').where('id',userId).update('role',"user");
+            console.log("updated to user id:"+ userId)
+            return true;
+        }else{
+            await knex('users').where('id',userId).update('role','admin');
+            console.log("updated to admin")
+            return true;
+        }
+    }catch(error){
+        console.error('Error getting user id  by username:', error);
+        throw error;
+    }
+    
+}
+
 const getCodeByUserName = async(userName)=>{
     try{
         const userCode =  await knex('users').select('code').where('name',userName);
@@ -150,6 +189,22 @@ const getCodeByUserName = async(userName)=>{
         throw error; 
     }
     
+}
+
+const deleteUserById = async(userId) =>{
+    try{
+        const user = await knex('users').select().where('id',userId);
+        if(user.length === 0){
+            throw new Error("nie ma takiego uzytkownika");
+        }else{
+            await knex('users').where('id',userId).del();
+            return true;
+        }
+
+    }catch(error){
+        console.error("Error deleting user",error);
+        throw error;
+    }
 }
 
 // COMMENTS
@@ -186,14 +241,27 @@ const deleteCommentById = async(commentId)=>{
     
 }
 
+const getCommentsByUserId = async(userId)=>{
+    try{
+        const comments = await knex('comments').select().where('userId',userId);
+        return comments;
+    }catch(error){
+        console.error('Error getting comments by User id ', error);
+        throw error; 
+    }
+}
 
 module.exports = {
+    changeUserRole,
+    deleteUserById,
+    getCommentsByUserId,
+    getUserRole,
     getUserByUsername,
     createPost,
     getPosts,
     getUsers,
     createUsers,
-    getPostByUserId,
+    getPostsByUserId,
     getUserById,
     getUserIdByUsersName,
     getPostById,

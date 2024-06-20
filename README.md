@@ -4,9 +4,11 @@ opis strony:
     strona przedstawia "blog" gdzie zalogowani użytkownicy mogą dodawać swoje posty które zalogowani użytkownicy mogą komentować
 
 TABELE 
-    1) users - id, name, code
+    1) users - id, name, code,role
     2) posts - id, title, content, userId
     3) comments - id, userName, comment, userId, postId
+
+role: admin/user - gdzie user to domyślna wartość kazdego nowego rejestrowanego uzytkownika, admin wprowadzony z seeda bezposrednio, login admin, haslo: admin123
 
 users/id jest forgein key dla posts i comments
 
@@ -40,6 +42,17 @@ Index - szablon strony glownej
     1) wyswietlenie wszystkich postow
     2) mozliwosc dodania posta jesli user jest zalogowany
     3) mozliwosc przejscia do szablonu logowania
+
+Admin - szablon strony glownej ze strony admina
+    1) wyswietlenie wszystkich postow
+    2) wyswietlenie wszystkich uzytkownikow
+    3) mozliwosc tworzenia postow
+
+User - szablon indywidualnego usera
+    1) nazwa i rola uzytkownika
+    2) wszystkie posty danego uzytkownika
+    3) wszystkie komentarze uzytkownika
+    4) usuniecie uzytkownika
 
 config - folder z plikami configuracyjnymi z baza danych i validacji logowania
 views - szablony strony

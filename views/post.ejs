@@ -48,7 +48,7 @@
     <% dbComments.forEach(comment => { %>
         <li class="comment" data-user-id="<%= comment.userId %>" data-post-id="<%= post.userId %>">
             <span class="commentText"><%= comment.comment %></span> by <%= comment.userName %>
-            <% if (comment.userId === loggedInUserId || post.userId === loggedInUserId) { %>
+            <% if (comment.userId === loggedInUserId || post.userId === loggedInUserId || userRole === "admin") { %>
                 <button class="deleteBtn" data-comment-id="<%= comment.id %>">Delete</button>
             <% } %>
         </li>
