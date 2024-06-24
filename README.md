@@ -53,8 +53,10 @@ User - szablon indywidualnego usera
     2) wszystkie posty danego uzytkownika
     3) wszystkie komentarze uzytkownika
     4) usuniecie uzytkownika
+    5) zmiana roli user/admin\
 
-config - folder z plikami configuracyjnymi z baza danych i validacji logowania
+
+config - folder z plikami validacji logowania
 views - szablony strony
 .env - plik configuracyjny z danymi odnosnie połączenia z baza
 
@@ -67,6 +69,7 @@ __tests__ - testy dla funkcji api:
     //users
     1) getUserById
     2) createUsers
+    3) deleteUser
     //posts
     1) deletePostById
     2) createPost

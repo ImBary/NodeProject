@@ -126,8 +126,6 @@ app.post('/login', (req, res, next) => {
             }
             console.log("Authenticated user object:", user); 
             req.session.user = user.name; 
-            console.log("this: " + user.name); 
-
             res.cookie('username', user.name, { maxAge: 900000, httpOnly: true });
             return res.redirect('/');
         });
@@ -191,55 +189,62 @@ app.get('/posts/:id', async (req,res)=>{
 
 app.post('/post/:id', async (req, res) => {
     const postId = req.params.id;
-    console.log("comment postId: " + postId);
+    
     const { comment } = req.body;
     const usrName = req.userName;
-    const user = await api.getUserIdByUsersName(usrName);
-    console.log("comment userId: " + usrName);
+    if (usrName == "nieznajomy") {
+        console.log("NAAME:" + usrName)
+        res.status(303).json({ redirect: '/' });
+        return;
+    }else{
+        
+        const user = await api.getUserIdByUsersName(usrName);
+        try {
+            if (usrName !== 'nieznajomy' && comment != null && comment.length >= 1) {
+                const com = { UserId: user[0].id, comment: comment, PostId: postId, userName: usrName };
+                await api.createCommentToPost(com);
+            }
+            console.log("tutaj")
 
-    try {
-        if (usrName === 'nieznajomy' && comment != null && comment.length >= 1) {
-            const comN = { UserId: 0, comment: comment, PostId: postId, userName: usrName };
-            await api.createCommentToPost(comN);
-        } else if (usrName !== 'nieznajomy' && comment != null && comment.length >= 1) {
-            const com = { UserId: user[0].id, comment: comment, PostId: postId, userName: usrName };
-            await api.createCommentToPost(com);
+            res.sendStatus(200); 
+        } catch (error) {
+            console.error("Error creating comment:", error);
+            res.sendStatus(500); 
         }
-
-        res.sendStatus(200); 
-    } catch (error) {
-        console.error("Error creating comment:", error);
-        res.sendStatus(500); 
     }
+    
 });
 
 app.delete('/posts/:id', async (req, res) => {
     const postId = req.params.id;
     const usrName = req.userName;
-    const postToDelete = await api.getPostById(postId);
-    const user = await api.getUserIdByUsersName(usrName);
-    const role = await api.getUserRole(usrName);
-    console.log("postToDelete: "+postToDelete[0]);
-    console.log("user "+user[0].id);
-    try {
+    if(usrName == "nieznajomy"){
+        res.redirect('/login');
+    }else{
+        const postToDelete = await api.getPostById(postId);
+        const user = await api.getUserIdByUsersName(usrName);
+        const role = await api.getUserRole(usrName);
+   
+        try {
 
-        if(user[0].id===postToDelete[0].userId || role === "admin"){
-                const isDeleted = await api.deletePostById(postId);
-            if (isDeleted) {
-                console.log("bylem tu")
+            if((user[0].id===postToDelete[0].userId && role == "user") || role === "admin"){
+                    const isDeleted = await api.deletePostById(postId);
+                if (isDeleted) {
+                    console.log("bylem tu")
+                    res.redirect('/');
+                } else {
+                    res.status(500).send("Failed to delete post");
+                }
+            }else{
                 res.redirect('/');
-            } else {
-                res.status(500).send("Failed to delete post");
+                
             }
-        }else{
-            res.redirect('/');
             
+            
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error deleting post");
         }
-        
-        
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error deleting post");
     }
 });
 
@@ -249,30 +254,37 @@ app.put('/post/:id',async (req,res)=>{
     const { content,title} = req.body;
     
     const userName = req.userName;
-    const postToUpdate = await api.getPostById(postId);
-    const userFromDb = await api.getUserIdByUsersName(userName); // corrected variable name
+    if (userName == "nieznajomy") {
+        console.log("NAAME:" + userName)
+        res.status(303).json({ redirect: '/login' });
+        return;
+    }else{
+        const postToUpdate = await api.getPostById(postId);
+        const userFromDb = await api.getUserIdByUsersName(userName); 
+        
+        try {
     
-    try {
-
-        if(userFromDb[0].id===postToUpdate[0].userId){
-            const isUpdated = await api.updatePostByUserId(postId,content,title);
-            if(isUpdated){
-                res.redirect('/');
+            if(userFromDb[0].id===postToUpdate[0].userId){
+                const isUpdated = await api.updatePostByUserId(postId,content,title);
+                if(isUpdated){
+                    res.redirect('/');
+                }else{
+                    res.status(500).send('udpating error');
+                }
+    
             }else{
-                res.status(500).send('udpating error');
+                res.redirect('/');
             }
-
-        }else{
-            res.redirect('/');
+            
+            
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error deleting post");
         }
-        
-        
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error deleting post");
     }
+    
 })
-
+//admin
 app.get('/admin/user/:id', async (req, res) => {
     const userName = req.userName;
     const userId = req.params.id;
@@ -331,6 +343,7 @@ app.post('/admin/user/:id', async(req,res)=>{{
     }
     
 }})
+//endpoint do testu zeby dac komus admina 
 app.post('/admin/change/:id',async(req,res)=>{
     const role = await api.getUserRole("admin");
     await api.changeUserRole("admin");

@@ -28,6 +28,15 @@ const validatePassword = async(req,res,next)=>{
     if(password == name){
         return res.status(400).send("Password and Name can't be the same");
     }
+    if (!name.trim() || name.contains(' ')) {
+        return res.status(400).send("Name cannot contain only spaces");
+    }
+    if (!password.trim() || password.contains(' ')) {
+        return res.status(400).send("Password cannot contain only spaces");
+    }
+    if(name=="nieznajomy"){
+        return res.status(400).send("invalid username")
+    }
     req.code = password;
     next();
 };

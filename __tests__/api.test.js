@@ -9,6 +9,7 @@ jest.mock('../api/api', () => {
     const mockGetCommentsByPostId = jest.fn();
     const mockCreateCommentToPost = jest.fn();
     const mockDeleteCommentById = jest.fn();
+    const mockDeleteUserById = jest.fn();
 
     return {
       
@@ -16,6 +17,7 @@ jest.mock('../api/api', () => {
       deletePostById: mockDeletePostById,
       createPost: mockCreatePost,
       createUsers: mockCreateUsers,
+      deleteUserById:mockDeleteUserById,
       getUserById:mockGetUserById, 
       getPostByUserId:mockGetPostByUserId,
       getCommentsByPostId:mockGetCommentsByPostId,
@@ -25,15 +27,16 @@ jest.mock('../api/api', () => {
   });
 
   const { 
-    getUserById,// done
+    getUserById,
     updatePostByUserId, 
-    deletePostById, //done
-    createPost, //done
-    createUsers,//done
+    deletePostById, 
+    deleteUserById,
+    createPost, 
+    createUsers,
     getPostByUserId,
     getCommentsByPostId,
     createCommentToPost,
-    deleteCommentById, //done
+    deleteCommentById, 
   } = require('../api/api');
   
   const mockUser = {
@@ -71,6 +74,15 @@ jest.mock('../api/api', () => {
         //console.log(getUserResult)
         expect(getUserResult[0]).toEqual(mockUser); 
     });
+    test('delete user from the db',async()=>{
+      await createUsers(mockUser);
+      await deleteUserById(mockUser.id);
+      
+      getUserById.mockResolvedValue([]); 
+      const getUserResult = await getUserById(mockUser.id);
+      
+      expect(getUserResult.length).toBe(0);
+    })
     
     
   });
