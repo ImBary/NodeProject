@@ -40,11 +40,11 @@ app.use(express.urlencoded( {extended: true}));
 
 //user
 
-app.get('/login', (req, res) => {
+app.get('/login', async (req, res) => {
     res.render('login', { message: req.flash('error') });
 });
 
-app.get('/register',(req,res)=>{
+app.get('/register',async (req,res)=>{
     res.render('register');
 });
 
@@ -73,7 +73,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.post('/login', (req, res, next) => {
+app.post('/login', async (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
         if (err) {
             return next(err);
@@ -95,7 +95,7 @@ app.post('/login', (req, res, next) => {
 });
 
 
-app.get('/logout', (req, res) => {
+app.get('/logout', async (req, res) => {
     req.session.destroy(err => {
         if (err) {
             console.error('Błąd podczas niszczenia sesji', err);
@@ -163,6 +163,25 @@ app.delete('/comments/:id', async (req, res) => {
     }
 });
 
+app.put('/comments/:id',async(req,res)=>{
+    const userName = req.userName;
+    const comId = req.params.id;
+    if (userName == "nieznajomy") {
+        console.log("NAAME:" + userName)
+        res.status(303).json({ redirect: '/login' });
+        return;
+    }else{
+        try{
+            const {content} = req.body;
+            if(content!=null && content.length>0 && !content.trim()){
+                await api.updateCommentById(id,content);
+            }
+
+        }catch(err){
+            
+        }
+    }
+})
 
 app.get('/posts/:id', async (req,res)=>{
     const postId = req.params.id;
@@ -200,8 +219,8 @@ app.post('/post/:id', async (req, res) => {
     const usrName = req.userName;
     if (usrName == "nieznajomy") {
         console.log("NAAME:" + usrName)
-        res.status(303).json({ redirect: '/' });
-        return;
+        res.redirect('/login');
+        
     }else{
         
         const user = await api.getUserIdByUsersName(usrName);
@@ -262,8 +281,8 @@ app.put('/post/:id',async (req,res)=>{
     const userName = req.userName;
     if (userName == "nieznajomy") {
         console.log("NAAME:" + userName)
-        res.status(303).json({ redirect: '/login' });
-        return;
+        res.redirect('/login');
+        
     }else{
         const postToUpdate = await api.getPostById(postId);
         const userFromDb = await api.getUserIdByUsersName(userName); 

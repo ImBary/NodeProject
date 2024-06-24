@@ -253,6 +253,16 @@ const deleteCommentById = async(commentId)=>{
     
 }
 
+const updateCommentById=async(id,content)=>{
+    try{
+        return await knex('comments').where('id',id).update("comment",content);
+
+    }catch(error){
+        console.error("Error updating comment",error);
+        throw error;
+    }
+}
+
 const getCommentsByUserId = async(userId)=>{
     try{
         const comments = await knex('comments').select().where('userId',userId);
@@ -282,5 +292,6 @@ module.exports = {
     getCodeByUserName ,
     getCommentsByPostId,
     createCommentToPost,
-    deleteCommentById
+    deleteCommentById,
+    updateCommentById
 };
