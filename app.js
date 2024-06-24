@@ -163,27 +163,20 @@ app.delete('/comments/:id', async (req, res) => {
     }
 });
 
-app.put('/comments/:id',async(req,res)=>{
-    const userName = req.userName;
-    const comId = req.params.id;
-    if (userName == "nieznajomy") {
-        console.log("NAAME:" + userName)
-        res.status(303).json({ redirect: '/login' });
-        return;
-    }else{
-        try{
-            const {content} = req.body;
-            if(content!=null && content.length>0 && !content.trim()){
-                await api.updateCommentById(id,content);
-            }
+app.put('/comments/:id', async (req, res) => {
+    const commentId = req.params.id;
+    const newContent = req.body.comment;
 
-        }catch(err){
-            
-        }
+    try {
+        await api.updateCommentById(commentId, newContent);
+        res.json({success:true})
+    } catch (error) {
+        console.error('Error updating comment:', error);
+        res.sendStatus(500); 
     }
-})
+});
 
-app.get('/posts/:id', async (req,res)=>{
+app.get('/post/:id', async (req,res)=>{
     const postId = req.params.id;
     const usrName = req.userName;
     try{
@@ -231,7 +224,7 @@ app.post('/post/:id', async (req, res) => {
             }
             console.log("tutaj")
 
-            res.sendStatus(200); 
+            res.sendStatus(204); 
         } catch (error) {
             console.error("Error creating comment:", error);
             res.sendStatus(500); 

@@ -6,9 +6,10 @@
     <style>
         .commentText {
             border: 1px solid #000; /* Black border */
-            padding: 5px; /* Some padding for better appearance */
+            padding: 3px; /* Some padding for better appearance */
             border-radius: 5px; /* Optional: rounded corners */
             display: inline-block; /* Ensure the span is an inline block */
+            
         }
     </style>
     </head>
@@ -36,12 +37,18 @@
         <button type="submit">Create Comment</button>
     </form>
     <button id="filterCommentsBtn">Show yours comments</button>
+    
     <ul id="commentsList">
         <% dbComments.forEach(comment => { %>
-            <li class="comment" data-user-id="<%= comment.userId %>" data-post-id="<%= post.userId %>">
+            <li class="comment" data-comment-id="<%= comment.id %>" data-user-id="<%= comment.userId %>" data-post-id="<%= post.userId %>">
                 <span class="commentText"><%= comment.comment %></span> by <%= comment.userName %>
                 <% if (comment.userId === loggedInUserId || post.userId === loggedInUserId || userRole === "admin") { %>
                     <button class="deleteBtn" data-comment-id="<%= comment.id %>">Delete</button>
+                    <button class="editBtn" data-comment-id="<%= comment.id %>">Edit</button>
+                    <form class="editCommentForm" style="display: none;">
+                        <input type="text" class="editCommentInput" value="<%= comment.comment %>">
+                        <button type="submit" class="updateCommentBtn">Update</button>
+                    </form>
                 <% } %>
             </li>
         <% }) %>
@@ -86,6 +93,64 @@
             });
         });
     </script>
+    <!--COMMENT UPDATE-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const commentsList = document.getElementById('commentsList');
+
+        commentsList.addEventListener('click', function(event) {
+            if (event.target.classList.contains('editBtn')) {
+                const commentId = event.target.getAttribute('data-comment-id');
+                const commentLi = event.target.closest('li');
+                const commentText = commentLi.querySelector('.commentText');
+                const editForm = commentLi.querySelector('.editCommentForm');
+                
+                commentText.style.display = 'none';
+                editForm.style.display = 'inline';
+            }
+        });
+
+        commentsList.addEventListener('submit', function(event) {
+            if (event.target.classList.contains('editCommentForm')) {
+                event.preventDefault();
+                const commentLi = event.target.closest('li');
+                const commentId = commentLi.getAttribute('data-comment-id');
+                const newContent = commentLi.querySelector('.editCommentInput').value;
+
+                updateComment(commentId, newContent, commentLi);
+            }
+        });
+    });
+
+    </script>
+
+    <script>
+
+    function updateComment(commentId, newContent, commentLi) {
+        fetch(`/comments/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ comment: newContent })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const commentText = commentLi.querySelector('.commentText');
+                commentText.textContent = newContent;
+                commentText.style.display = 'inline';
+                commentLi.querySelector('.editCommentForm').style.display = 'none';
+            } else {
+                console.error('Error updating comment:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating comment:', error);
+        });
+    }
+    </script>
+
 
     <script>
         function deleteComment(commentId) {

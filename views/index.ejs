@@ -32,7 +32,7 @@
 <ul>
     <% posts.forEach(post => { %>
         <li><%= post.title %> </li>
-        <form action="/posts/<%= post.id %>" method="GET" style="display: inline">
+        <form action="/post/<%= post.id %>" method="GET" style="display: inline">
             <button type="submit">View Post</button>
         </form>
     <% }) %>
