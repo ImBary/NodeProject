@@ -36,47 +36,9 @@ app.set('view engine','ejs');
 app.use(express.urlencoded( {extended: true}));
 
 
-app.post('/posts', async (req,res)=>{
 
-    const {title, content} = req.body;
-    const userName = req.userName;
-    try{
-        if(userName == "nieznajomy"){
-            return res.redirect('/login');
-        }
-        const userId = await api.getUserIdByUsersName(userName);
-        if(userId.length===0){
-            return res.redirect('/login');
-        }
-        
-        const usrPost = {title:title,content:content,userId:userId[0].id};
-        await api.createPost(usrPost);
-        res.redirect('/');
-    }catch(err){
-        console.error(err);
-        res.status(500).send('Error adding user');
-    }
-});
 
-app.get('/',async (req,res)=>{
-    const userName = req.userName 
-    try{
-        const posts = await api.getPosts();
-        const role = await api.getUserRole(userName);
-        console.log("role "+role);
-        if(role == "admin"){
-            const users = await api.getUsers();
-            res.render('admin',{posts,userName,users})
-        }else{
-            console.log(userName);
-            res.render('index',{posts,userName});
-        }
-       
-    }catch(err){
-        console.error(err);
-        res.status(500).send('Błąd serwera DUPA');
-    }
-});
+//user
 
 app.get('/login', (req, res) => {
     res.render('login', { message: req.flash('error') });
@@ -143,6 +105,50 @@ app.get('/logout', (req, res) => {
         res.clearCookie('connect.sid');
         res.redirect('/');
     });
+});
+
+//posts
+
+app.get('/',async (req,res)=>{
+    const userName = req.userName 
+    try{
+        const posts = await api.getPosts();
+        const role = await api.getUserRole(userName);
+        console.log("role "+role);
+        if(role == "admin"){
+            const users = await api.getUsers();
+            res.render('admin',{posts,userName,users})
+        }else{
+            console.log(userName);
+            res.render('index',{posts,userName});
+        }
+       
+    }catch(err){
+        console.error(err);
+        res.status(500).send('Błąd serwera DUPA');
+    }
+});
+
+app.post('/posts', async (req,res)=>{
+
+    const {title, content} = req.body;
+    const userName = req.userName;
+    try{
+        if(userName == "nieznajomy"){
+            return res.redirect('/login');
+        }
+        const userId = await api.getUserIdByUsersName(userName);
+        if(userId.length===0){
+            return res.redirect('/login');
+        }
+        
+        const usrPost = {title:title,content:content,userId:userId[0].id};
+        await api.createPost(usrPost);
+        res.redirect('/');
+    }catch(err){
+        console.error(err);
+        res.status(500).send('Error adding user');
+    }
 });
 
 app.delete('/comments/:id', async (req, res) => {

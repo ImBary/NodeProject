@@ -4,8 +4,8 @@
  */
 exports.up = function(knex) {
     return knex.schema.alterTable('users', (table) => {
-        table.string('code', 60).nullable().alter(); // Change the 'code' column to a string with a maximum length of 60 characters
-        table.string('role').defaultTo('user'); // Add the 'role' column with a default value of 'user'
+        table.string('code', 60).nullable().alter(); 
+        table.string('role').defaultTo('user'); //dodanie kazdemu uzytkownikowi defultowo usera
     });
 };
 
@@ -15,7 +15,7 @@ exports.up = function(knex) {
  */
 exports.down = function(knex) {
     return knex.schema.alterTable('users', (table) => {
-        table.integer('code').nullable().alter(); // Revert the 'code' column back to an integer
-        table.dropColumn('role'); // Remove the 'role' column
+        table.integer('code').nullable().alter(); 
+        table.dropColumn('role'); 
     });
 };
