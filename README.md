@@ -29,6 +29,7 @@ Register - szablon rejestracji
     3) sprawdzenie czy haslo jest zgodne z wymaganiami
             * haslo nie moze byc takie samo jak nazwa
             * haslo nie moze byc krotsze niz 5 znakow
+            *login i haslo nie mogą być spacja
     4) hasla szyfrowane bcryptem
 
 Post - szablon indywnidualnego postu
@@ -37,6 +38,7 @@ Post - szablon indywnidualnego postu
     3) mozliwosc dodanie komentarza jesli user jest zalogowany
     4) mozliwosc edycji posta jesli user jest twórcą posta
     5) mozliwosc filtracji komentarzy zeby wyswietlic swoje komentarze
+    6) mozliwosc edycji komentarza
 
 Index - szablon strony glownej
     1) wyswietlenie wszystkich postow

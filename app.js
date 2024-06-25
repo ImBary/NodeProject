@@ -166,14 +166,19 @@ app.delete('/comments/:id', async (req, res) => {
 app.put('/comments/:id', async (req, res) => {
     const commentId = req.params.id;
     const newContent = req.body.comment;
-
-    try {
-        await api.updateCommentById(commentId, newContent);
-        res.json({success:true})
-    } catch (error) {
-        console.error('Error updating comment:', error);
-        res.sendStatus(500); 
+    const userName = req.userName;
+    if(userName=="nieznajomy"){
+        res.redirect('/');
+    }else{
+        try {
+            await api.updateCommentById(commentId, newContent);
+            res.json({success:true})
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            res.sendStatus(500); 
+        }
     }
+    
 });
 
 app.get('/post/:id', async (req,res)=>{
