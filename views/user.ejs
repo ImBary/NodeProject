@@ -33,7 +33,7 @@
 <ul>
     <% posts.forEach(post => { %>
         <li><%= post.title %> </li>
-        <form action="/posts/<%= post.id %>" method="GET" style="display: inline">
+        <form action="/post/<%= post.id %>" method="GET" style="display: inline">
             <button type="submit">Check Post</button>
         </form>
     <% }) %>
@@ -42,7 +42,7 @@
 <ul>
     <% comments.forEach(comment => { %>
         <li><%= comment.comment %> </li>
-        <form action="/posts/<%= comment.postId %>" method="GET" style="display: inline">
+        <form action="/post/<%= comment.postId %>" method="GET" style="display: inline">
             <button type="submit">Check Post</button>
         </form>
     <% }) %>

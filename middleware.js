@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const api = require('./api/api');
 
-const handleUser = async (req, res, next) => {
+const handleUser = async (req, res, next) => {//middleware do sprawdzania czy user zalogowany
     let userName = 'nieznajomy';
 
     if (req.session.user) {
@@ -15,29 +15,36 @@ const handleUser = async (req, res, next) => {
         req.session.user = userName;
     }
 
-    req.userName = userName; // Make userName available in req object
+    req.userName = userName; 
     next();
 };
 
 const validatePassword = async(req,res,next)=>{
-    const {name} = req.body;
-    const password = req.code;
-    if(password.length < 4){
-        return res.status(400).send("Password to short");
+    const {username, code} = req.body;
+    console.log(username);
+    console.log(code);
+    if (code.length < 4) {
+        return res.status(400).send("Password too short");
     }
-    if(password == name){
+    if(code == username){
         return res.status(400).send("Password and Name can't be the same");
     }
-    if (!name.trim() || name.contains(' ')) {
+    if (!username.trim() || username.includes(' ')) {
         return res.status(400).send("Name cannot contain only spaces");
     }
-    if (!password.trim() || password.contains(' ')) {
+    if (!code.trim() || code.includes(' ')) {
         return res.status(400).send("Password cannot contain only spaces");
     }
-    if(name=="nieznajomy"){
+    if(username=="nieznajomy"){
         return res.status(400).send("invalid username")
     }
-    req.code = password;
+    if(await api.getUserByUsername(username)){
+        req.flash('error', 'Username already exists');
+        return res.redirect('/login');
+        
+    }
+    req.code = code;
+    req.name = username;
     next();
 };
 

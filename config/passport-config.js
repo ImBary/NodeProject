@@ -1,5 +1,5 @@
 const LocalStrategy = require('passport-local').Strategy;
-const api = require('../api/api'); // Import your API functions for database interactions
+const api = require('../api/api'); 
 const bcrypt = require('bcrypt');
 function initialize(passport) {
     const authenticateUser = async (username, password, done) => {
@@ -23,16 +23,16 @@ function initialize(passport) {
         }
     };
 
-    passport.use(new LocalStrategy({ usernameField: 'username', passwordField: 'code' }, authenticateUser));
+    passport.use(new LocalStrategy({ usernameField: 'username', passwordField: 'code' }, authenticateUser));//Ustawia pola 'username' i 'code' jako identyfikatory logowania ii używa authenticateUser do weryfikacji.
 
     passport.serializeUser((user, done) => {
-        done(null, user.id); // Serialize user ID into the session
+        done(null, user.id); // Określa jak zapisać użytkownika w sesji zapiisuje id
     });
 
     passport.deserializeUser(async (id, done) => {
         try {
             const user = await api.getUserById(id);
-            done(null, user); // Deserialize user from session using user ID
+            done(null, user); // Określa jak odtworzyć obiekt użytkownika z danych sesji pobiera na podstawie id
         } catch (error) {
             done(error);
         }

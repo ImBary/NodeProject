@@ -4,7 +4,7 @@
  */
 exports.up = function(knex) {
     return knex.schema.alterTable('users', (table) => {
-      table.string('code', 60).nullable().alter(); // Change the 'code' column to a string with a maximum length of 60 characters
+      table.string('code', 60).nullable().alter(); 
     });
   };
   
@@ -14,6 +14,6 @@ exports.up = function(knex) {
    */
   exports.down = function(knex) {
     return knex.schema.alterTable('users', (table) => {
-      table.integer('code').nullable().alter(); // Revert the 'code' column back to an integer
+      table.integer('code').nullable().alter(); 
     });
   };

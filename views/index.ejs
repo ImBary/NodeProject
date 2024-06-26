@@ -25,8 +25,17 @@
     <button type="submit">Create Post</button>
 </form>
 
+<h2>Sort Posts</h2>
 
-
+<form action="/postsort" method="POST">
+    <select name="typeOfSort">
+        <option value="" selected>Sort By...</option>
+        <option value="desc">Bigger Posts</option>
+        <option value="asc">Smaller Posts</option>
+    </select>
+    <input type="hidden" name="action" value="filtr">
+    <button type="submit">Apply</button>
+</form>
 
 <h2>Posts Titles</h2>
 <ul>
