@@ -85,5 +85,7 @@ __tests__ - testy dla funkcji api:
     3) getCommentsByPostId
 
     app.use(express.static(path.join(__dirname, 'public')));
+    const path = require('path'); 
     const apiPath = path.join(__dirname, 'api', 'api');
     const api = require(apiPath);
+    npx knex migrate:make migration_name

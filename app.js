@@ -114,7 +114,7 @@ app.post('/postsort',async(req,res)=>{
             }else{
                 sorted=posts;
             }
-            console.log(sorted)
+           // console.log(sorted)
             if(role === 'admin'){
                 const users = await api.getUsers();
                 res.render('admin',{posts:sorted,userName,users});
@@ -411,6 +411,8 @@ app.post('/admin/user/:id', async(req,res)=>{//zmiana roli
     }
     
 })
+
+//ifconfig bo ethernecie enp0 po wifi wlp
 
 
 app.listen(process.env.PORT, process.env.HOST_Wifi, () => {
