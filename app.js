@@ -1,6 +1,6 @@
 const express = require('express');//glowny framework
 const app = express();
-const api = require('./api/api')
+const api = require('./api/api');
 const flash = require('connect-flash');//middleware pozwalajacy komunikaty flash czyli tymczasowe wiadomosci przechowywane w sesji
 const cookieParser = require('cookie-parser');// middleware analizuje naglowek Cookie ii wypełnia req.cookies obiektem, ktorego kluczami sa ciasteczka
 const session = require('express-session');// to middleware sesji dla express pozwala na zarzaadzaanie i tworzenie sesji uzytkownikow
@@ -103,7 +103,7 @@ app.post('/postsort',async(req,res)=>{
         if(action==='filtr'){
             const posts = await api.getPosts();
             let sorted ;
-            console.log(typeOfSort)
+            //console.log(typeOfSort)
             const totalLen = posts.reduce((sum,post)=>sum+post.content.length,0)
             const avgLen = posts.length > 0 ? (totalLen/posts.length) : 0;
             if(typeOfSort==='desc'){
@@ -117,14 +117,14 @@ app.post('/postsort',async(req,res)=>{
             console.log(sorted)
             if(role === 'admin'){
                 const users = await api.getUsers();
-                res.render('admin',{posts:sorted,userName,users})
+                res.render('admin',{posts:sorted,userName,users});
             }else{
                 res.render('index',{posts: sorted,userName});
             }
             
         }
     }catch(err){
-        res.status(500).json({message:"Error with loading filters"})
+        res.status(500).json({message:"Error with loading filters"});
     }
     
 })
@@ -145,14 +145,14 @@ app.get('/logout', async (req, res) => {//wylogowanie  z niszczyniem sesji
 //posts
 
 app.get('/',async (req,res)=>{//glowna strona domowa
-    const userName = req.userName 
+    const userName = req.userName ;
     try{
         const posts = await api.getPosts();
         const role = await api.getUserRole(userName);
         //console.log("role "+role);
         if(role == "admin"){
             const users = await api.getUsers();
-            res.render('admin',{posts,userName,users})
+            res.render('admin',{posts,userName,users});
         }else{
             console.log(userName);
             res.render('index',{posts,userName});
@@ -212,7 +212,7 @@ app.put('/comments/:id', async (req, res) => {//update komentarzy
     }else{
         try {
             await api.updateCommentById(commentId, newContent);
-            res.json({success:true})
+            res.json({success:true});
         } catch (error) {
             console.error('Error updating comment:', error);
             res.sendStatus(500); 
@@ -224,12 +224,14 @@ app.put('/comments/:id', async (req, res) => {//update komentarzy
 app.get('/post/:id', async (req,res)=>{//wyswietlenie konkternego posta
     const postId = req.params.id;
     const usrName = req.userName;
+    console.log(postId);
     try{
         const user = await api.getUserIdByUsersName(usrName);
         const dbPost = await api.getPostById(postId);
         const dbComments = await api.getCommentsByPostId(postId);
-        if(!dbPost || dbPost===1){
-            return res.redirect('/')
+        console.log(JSON.stringify(dbPost));
+        if(!dbPost || dbPost.length==0){
+            return res.status(404).json({message:"error finding page"});
         }
         const post = dbPost[0];
         if(usrName!=='nieznajomy'){
@@ -242,7 +244,9 @@ app.get('/post/:id', async (req,res)=>{//wyswietlenie konkternego posta
         }
         
     }catch(err){
-        throw new Error(err);
+        
+        console.error(err);
+        res.status(500).json({message:"Error deleting post"});
     }
     
 })
@@ -353,6 +357,9 @@ app.get('/admin/user/:id', async (req, res) => {//wyswietlenie danego uzytkownik
     if (role === "admin") {//tylko admini
     
         const userDb = await api.getUserById(userId);
+        if(!userDb || userDb.length<1){
+            res.status(404).json({message:'Error finding user'})
+        }
         const user = userDb[0];
         const posts = await api.getPostsByUserId(userId);
         const countOfPosts = posts.length;
@@ -376,10 +383,10 @@ app.delete('/admin/user/:id',async(req,res)=>{//usuwanie uzytkownikow
         if(await api.deleteUserById(userId)==true){
             res.redirect("/");
         }else{
-            res.json({message:"Error finding the user"})
+            res.json({message:"Error finding the user"});
         }
     }else{
-        res.json({message:"Only admins can delete users"})
+        res.json({message:"Only admins can delete users"});
     }
 
 })
@@ -394,7 +401,7 @@ app.post('/admin/user/:id', async(req,res)=>{//zmiana roli
     //console.log("zmiana roli rolaa:"+role)
     if((role === "admin") && (userName != userToChangeDb[0].name)){//samemu sobie nie zmienimy
         if(await api.changeUserRole(userId,userToChange)==true){
-            console.log("tutaj")
+            //console.log("tutaj");
             
         }else{
             res.json({message:"error changing role"})
@@ -406,6 +413,6 @@ app.post('/admin/user/:id', async(req,res)=>{//zmiana roli
 })
 
 
-app.listen(process.env.PORT, process.env.HOST, () => {
-    console.log(`Server is running at http://${process.env.HOST}:${process.env.PORT}/`);
+app.listen(process.env.PORT, process.env.HOST_Wifi, () => {
+    console.log(`Server is running at http://${process.env.HOST_Wifi}:${process.env.PORT}/`);
   });

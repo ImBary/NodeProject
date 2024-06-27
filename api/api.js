@@ -57,7 +57,7 @@ const deletePostById = async (id)=>{
                 //console.log("deleted:" + isHere[0])
             return isHere;
         }else{
-            console.log("no post with this id")
+            //console.log("no post with this id")
             return false;
         }
     }catch(error){
@@ -76,7 +76,7 @@ const updatePostByUserId = async(id,content,title) =>{
             console.log("im here "+ isHere);
             return isHere;
         }else{
-            console.log('no post with this id');
+            //console.log('no post with this id');
             return false;
         }
     }catch(error){
@@ -105,10 +105,10 @@ const getUserRole = async (userName) => {
     if(userName && userName != 'nieznajomy'){
         try {
             const result = await knex('users').select('role').where('name', userName);
-            console.log(JSON.stringify(result))
+            //console.log(JSON.stringify(result));
             
             const roleName = result[0].role;
-            console.log(roleName);
+            //console.log(roleName);
             
             return roleName;
         } catch (error) {
@@ -178,11 +178,11 @@ const changeUserRole = async(userId,role)=>{
         
         if(role === "admin"){
             await knex('users').where('id',userId).update('role',"user");
-            console.log("updated to user id:"+ userId)
+            //console.log("updated to user id:"+ userId)
             return true;
         }else{
             await knex('users').where('id',userId).update('role','admin');
-            console.log("updated to admin")
+            //console.log("updated to admin")
             return true;
         }
     }catch(error){

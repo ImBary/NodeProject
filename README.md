@@ -44,11 +44,13 @@ Index - szablon strony glownej
     1) wyswietlenie wszystkich postow
     2) mozliwosc dodania posta jesli user jest zalogowany
     3) mozliwosc przejscia do szablonu logowania
+    4) sortowanie wedlug wielkosci contentu postu
 
 Admin - szablon strony glownej ze strony admina
     1) wyswietlenie wszystkich postow
     2) wyswietlenie wszystkich uzytkownikow
     3) mozliwosc tworzenia postow
+    4)sortowanie wedlug wielkosci contentu postu
 
 User - szablon indywidualnego usera
     1) nazwa i rola uzytkownika
@@ -60,12 +62,12 @@ User - szablon indywidualnego usera
 
 config - folder z plikami validacji logowania
 views - szablony strony
-.env - plik configuracyjny z danymi odnosnie połączenia z baza
+.env - plik configuracyjny z danymi odnosnie połączenia z baza i portem
 
 api.js - operacje na bazie danych
 middleware.js - validacja logowania i validacja czy user jest zalogowany
 
-app.js - routes dla aplikacji
+app.js - endpointy applikacji
 
 __tests__ - testy dla funkcji api:
     //users
@@ -81,3 +83,7 @@ __tests__ - testy dla funkcji api:
     1) createCommentToPost
     2) deleteCommentById
     3) getCommentsByPostId
+
+    app.use(express.static(path.join(__dirname, 'public')));
+    const apiPath = path.join(__dirname, 'api', 'api');
+    const api = require(apiPath);

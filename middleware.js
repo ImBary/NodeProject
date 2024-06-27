@@ -29,14 +29,14 @@ const validatePassword = async(req,res,next)=>{
     if(code == username){
         return res.status(400).send("Password and Name can't be the same");
     }
-    if (!username.trim() || username.includes(' ')) {
+    if (username.includes(' ')) {
         return res.status(400).send("Name cannot contain only spaces");
     }
-    if (!code.trim() || code.includes(' ')) {
+    if (code.includes(' ')) {
         return res.status(400).send("Password cannot contain only spaces");
     }
     if(username=="nieznajomy"){
-        return res.status(400).send("invalid username")
+        return res.status(400).send("invalid username");
     }
     if(await api.getUserByUsername(username)){
         req.flash('error', 'Username already exists');

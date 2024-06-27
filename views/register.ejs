@@ -36,11 +36,11 @@
                     alert("Błędna nazwa.")
                     return false;
                 }
-                if (!username.trim() || username.includes(' ')) {
+                if ( username.includes(' ')) {
                     alert("Username cannot be empty or contain spaces");
                     return false;
                 }
-                if (!code.trim() || code.includes(' ')) {
+                if ( code.includes(' ')) {
                     alert("Password cannot be empty or contain spaces");
                     return false;
                 }
